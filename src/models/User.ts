@@ -8,7 +8,7 @@ export interface IUser extends Document {
         lastCheckIn: number;
         streak: number;
     };
-    inventory: Map<string, number>;
+    inventory: Record<string, number>;
 }
 
 const UserSchema: Schema = new Schema({

@@ -33,6 +33,8 @@ export default async function leaderboardRoutes(app: FastifyInstance) {
     '/leaderboard',
     {
       schema: {
+        tags: ['Leaderboard'],
+        summary: 'Fetch leaderboard records by difficulty',
         querystring: leaderboardQuerySchema,
         response: {
           200: leaderboardResponseSchema,
@@ -61,6 +63,9 @@ export default async function leaderboardRoutes(app: FastifyInstance) {
     {
       preHandler: [authenticate],
       schema: {
+        tags: ['Leaderboard'],
+        summary: 'Submit a leaderboard record for the authenticated user',
+        security: [{ bearerAuth: [] }],
         body: leaderboardBodySchema,
         response: {
           200: successSchema,

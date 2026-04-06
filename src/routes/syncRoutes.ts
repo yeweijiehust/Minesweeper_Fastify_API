@@ -28,6 +28,9 @@ export default async function syncRoutes(app: FastifyInstance) {
     {
       preHandler: [authenticate],
       schema: {
+        tags: ['Sync'],
+        summary: 'Get the authenticated user economy data',
+        security: [{ bearerAuth: [] }],
         response: {
           200: economySchema,
           404: errorSchema,
@@ -51,6 +54,9 @@ export default async function syncRoutes(app: FastifyInstance) {
     {
       preHandler: [authenticate],
       schema: {
+        tags: ['Sync'],
+        summary: 'Update the authenticated user economy data',
+        security: [{ bearerAuth: [] }],
         body: economySchema,
         response: {
           200: successSchema,
@@ -79,6 +85,9 @@ export default async function syncRoutes(app: FastifyInstance) {
     {
       preHandler: [authenticate],
       schema: {
+        tags: ['Sync'],
+        summary: 'Get the authenticated user inventory',
+        security: [{ bearerAuth: [] }],
         response: {
           200: inventorySchema,
           404: errorSchema,
@@ -93,7 +102,12 @@ export default async function syncRoutes(app: FastifyInstance) {
         return reply.code(404).send({ error: 'User not found' });
       }
 
-      return reply.code(200).send(user.inventory || {});
+      const inventory =
+        user.inventory instanceof Map
+          ? Object.fromEntries(user.inventory)
+          : (user.inventory ?? {});
+
+      return reply.code(200).send(inventory);
     },
   );
 
@@ -102,6 +116,9 @@ export default async function syncRoutes(app: FastifyInstance) {
     {
       preHandler: [authenticate],
       schema: {
+        tags: ['Sync'],
+        summary: 'Update the authenticated user inventory',
+        security: [{ bearerAuth: [] }],
         body: inventorySchema,
         response: {
           200: successSchema,
@@ -111,13 +128,14 @@ export default async function syncRoutes(app: FastifyInstance) {
     },
     async (request, reply) => {
       const { userId } = request.user as { userId: string };
+      const inventory = request.body;
 
       const user = await User.findById(userId);
       if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
 
-      user.inventory = request.body as Map<string, number>;
+      user.inventory = inventory;
       await user.save();
 
       return reply.code(200).send({ success: true });

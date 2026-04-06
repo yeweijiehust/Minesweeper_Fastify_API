@@ -24,6 +24,8 @@ export default async function authRoutes(app: FastifyInstance) {
     '/register',
     {
       schema: {
+        tags: ['Auth'],
+        summary: 'Register a new user',
         body: authBodySchema,
         response: {
           200: authSuccessSchema,
@@ -56,6 +58,8 @@ export default async function authRoutes(app: FastifyInstance) {
     '/login',
     {
       schema: {
+        tags: ['Auth'],
+        summary: 'Authenticate a user and return a JWT',
         body: authBodySchema,
         response: {
           200: authSuccessSchema,

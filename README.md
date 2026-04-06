@@ -9,6 +9,10 @@ pnpm install
 pnpm run dev
 ```
 
+Swagger UI: `http://localhost:8080/docs`
+
+OpenAPI JSON: `http://localhost:8080/docs/json`
+
 ## Scripts
 
 | Script | Description |
