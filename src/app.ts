@@ -53,8 +53,6 @@ export const buildApp = async () => {
     staticCSP: true,
   });
 
-  app.get('/docs/json', async () => app.swagger());
-
   app.get('/ping', async () => {
     return { status: 'ok', message: 'Fastify API is running' };
   });
