@@ -1,84 +1,126 @@
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyInstance } from 'fastify';
+import { Type } from '@sinclair/typebox';
+import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import User from '../models/User';
 import { authenticate } from '../middleware/auth';
 
-interface EconomyBody {
-    coins: number;
-    lastCheckIn: number;
-    streak: number;
-}
+const economySchema = Type.Object({
+  coins: Type.Number(),
+  lastCheckIn: Type.Number(),
+  streak: Type.Number(),
+});
 
-interface InventoryBody {
-    [key: string]: number;
-}
+const inventorySchema = Type.Record(Type.String(), Type.Number());
+
+const successSchema = Type.Object({
+  success: Type.Boolean(),
+});
+
+const errorSchema = Type.Object({
+  error: Type.String(),
+});
 
 export default async function syncRoutes(app: FastifyInstance) {
-    
-    // GET Economy
-    app.get('/economy', { preHandler: [authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
-        const { userId } = request.user as { userId: string };
-        
-        const user = await User.findById(userId);
-        if (!user) {
-            return reply.code(404).send({ error: 'User not found' });
-        }
-        
-        return reply.code(200).send(user.economy);
-    });
+  const typedApp = app.withTypeProvider<TypeBoxTypeProvider>();
 
-    // POST Economy
-    app.post<{
-        Body: EconomyBody
-      }>(
-        '/economy',
-        { preHandler: [authenticate] },
-        async (request, reply) => {
-          const { userId } = request.user as { userId: string };
-          const { coins, lastCheckIn, streak } = request.body;
-      
-          const user = await User.findById(userId);
-          if (!user) {
-            return reply.code(404).send({ error: 'User not found' });
-          }
-      
-          user.economy = { coins, lastCheckIn, streak };
-          await user.save();
-      
-          return reply.code(200).send({ success: true });
-        }
-      );
+  typedApp.get(
+    '/economy',
+    {
+      preHandler: [authenticate],
+      schema: {
+        response: {
+          200: economySchema,
+          404: errorSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { userId } = request.user as { userId: string };
 
-    // GET Inventory
-    app.get('/inventory', { preHandler: [authenticate] }, async (request: FastifyRequest, reply: FastifyReply) => {
-        const { userId } = request.user as { userId: string };
-        
-        const user = await User.findById(userId);
-        if (!user) {
-            return reply.code(404).send({ error: 'User not found' });
-        }
-        
-        // Mongoose automatically serializes Map to a JSON object
-        return reply.code(200).send(user.inventory || {});
-    });
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
 
-    // POST Inventory
-    app.post<{
-        Body: InventoryBody
-      }>(
-        '/inventory',
-        { preHandler: [authenticate] },
-        async (request, reply) => {
-          const { userId } = request.user as { userId: string };
-      
-          const user = await User.findById(userId);
-          if (!user) {
-            return reply.code(404).send({ error: 'User not found' });
-          }
-      
-          user.inventory = request.body as any;
-          await user.save();
-      
-          return reply.code(200).send({ success: true });
-        }
-      );
+      return reply.code(200).send(user.economy);
+    },
+  );
+
+  typedApp.post(
+    '/economy',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: economySchema,
+        response: {
+          200: successSchema,
+          404: errorSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { userId } = request.user as { userId: string };
+      const { coins, lastCheckIn, streak } = request.body;
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      user.economy = { coins, lastCheckIn, streak };
+      await user.save();
+
+      return reply.code(200).send({ success: true });
+    },
+  );
+
+  typedApp.get(
+    '/inventory',
+    {
+      preHandler: [authenticate],
+      schema: {
+        response: {
+          200: inventorySchema,
+          404: errorSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { userId } = request.user as { userId: string };
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      return reply.code(200).send(user.inventory || {});
+    },
+  );
+
+  typedApp.post(
+    '/inventory',
+    {
+      preHandler: [authenticate],
+      schema: {
+        body: inventorySchema,
+        response: {
+          200: successSchema,
+          404: errorSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { userId } = request.user as { userId: string };
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+
+      user.inventory = request.body as Map<string, number>;
+      await user.save();
+
+      return reply.code(200).send({ success: true });
+    },
+  );
 }
