@@ -1,12 +1,13 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 export const connectDB = async () => {
-    try {
-        const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/minesweeper';
-        await mongoose.connect(uri);
-        console.log('MongoDB Connected');
-    } catch (error) {
-        console.error('MongoDB Connection Error:', error);
-        process.exit(1);
-    }
+	try {
+		const uri =
+			process.env.MONGO_URI || "mongodb://localhost:27017/minesweeper";
+		await mongoose.connect(uri);
+		console.log("MongoDB Connected");
+	} catch (error) {
+		console.error("MongoDB Connection Error:", error);
+		process.exit(1);
+	}
 };
